@@ -61,7 +61,7 @@ def train_all_models(x_train, y_train, x_test, y_test):
             "f1": f1_score(y_test, preds)
         }
         results[name]=metrics
-        trained_models[name] = model    # ← Save trained model object here
+        trained_models[name] = model    #  Save trained model object here
 
    
     return results, trained_models   # Return both results and trained models
