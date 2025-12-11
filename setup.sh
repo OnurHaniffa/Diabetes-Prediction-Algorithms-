@@ -20,7 +20,7 @@ if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 else
     echo ">>> No requirements.txt found – installing common ML/data libs..."
-    pip install numpy pandas matplotlib seaborn scikit-learn jupyter ipykernel python-dotenv requests black isort pytest
+    pip install numpy pandas matplotlib seaborn scikit-learn jupyter ipykernel python-dotenv requests black isort pytest tensorflow keras pytorch torchvision
 fi
 
 echo ">>> DONE. To activate later, run:"
