@@ -1,5 +1,5 @@
 
-from SRC.preprocessing import (
+from preprocessing import (
     impute_missing_values,
     remove_outliers,
     select_features,
@@ -42,12 +42,3 @@ def balanced_split_and_scale(df):       #same as classical but with new funtion 
     return x_train_balanced, x_test_scaled, y_train_balanced, y_test
 
 
-def apply_random_oversampling(X_train_scaled, y_train):
-    ros = RandomOverSampler(random_state=42)
-    X_resampled, y_resampled = ros.fit_resample(X_train_scaled, y_train)
-
-    print("\n=== RANDOM OVERSAMPLING APPLIED ===")
-    print(f"Before: 0={sum(y_train==0)}, 1={sum(y_train==1)}")
-    print(f"After:  0={sum(y_resampled==0)}, 1={sum(y_resampled==1)}")
-
-    return X_resampled, y_resampled
