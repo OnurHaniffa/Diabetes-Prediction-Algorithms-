@@ -1,0 +1,182 @@
+{
+    "evaluation_methods": {
+        "train_test": {
+            "description": "Single 85/15 split. Trained on 85%, tested on 15% held-out (106 samples).",
+            "strengths": "Tests on real imbalanced data distribution - realistic for deployment.",
+            "weakness": "High variance - small test set means results depend on which samples were selected."
+        },
+        "cross_validation": {
+            "description": "10-fold stratified CV. Data split 10 ways, each fold used as test once, results averaged.",
+            "strengths": "Lower variance, more stable estimate, uses all data for evaluation.",
+            "weakness": "For oversampled models, CV was run on balanced data - may not reflect real-world imbalanced performance."
+        },
+        "guidance": "Use CV to compare models within same approach. Use Train/Test for final reporting and real-world expectations."
+    },
+
+    "best_models_train_test": {
+        "description": "Best models based on train/test split - use for official reporting",
+        "best_accuracy": {
+            "model": "AdaBoost",
+            "approach": "Tuned",
+            "metrics": { "accuracy": 0.8019, "precision": 0.7027, "recall": 0.7222, "f1": 0.7123 },
+            "reason": "Highest accuracy (80.19%) among tuned approaches with good balance across metrics."
+        },
+        "best_f1": {
+            "model": "Gaussian NB",
+            "approach": "Tuned + SMOTE",
+            "metrics": { "accuracy": 0.7642, "precision": 0.6000, "recall": 0.9167, "f1": 0.7253 },
+            "reason": "Best F1 (72.53%) with excellent recall - catches 91.67% of diabetic patients."
+        },
+        "best_recall": {
+            "model": "Logistic Regression",
+            "approach": "Tuned",
+            "metrics": { "accuracy": 0.7264, "precision": 0.5593, "recall": 0.9167, "f1": 0.6947 },
+            "reason": "Highest recall (91.67%) - critical for medical screening where missing cases is costly."
+        },
+        "best_precision": {
+            "model": "SVM",
+            "approach": "Untuned",
+            "metrics": { "accuracy": 0.7925, "precision": 0.7188, "recall": 0.6389, "f1": 0.6765 },
+            "reason": "Highest precision (71.88%) - fewest false positives when predicting diabetes."
+        },
+        "best_balanced_simple": {
+            "model": "KNN",
+            "approach": "Untuned",
+            "metrics": { "accuracy": 0.8019, "precision": 0.6744, "recall": 0.8056, "f1": 0.7342 },
+            "reason": "Best F1 among untuned (73.42%). Simple baseline with strong, consistent performance."
+        }
+    },
+
+    "best_models_cv": {
+        "description": "Best models based on 10-fold CV - useful for model comparison, but see caveats below",
+        "best_overall": {
+            "model": "Random Forest",
+            "approach": "Tuned + ROS",
+            "metrics": { "cv_accuracy": 0.8716, "cv_precision": 0.8357, "cv_recall": 0.9270, "cv_f1": 0.8783 },
+            "reason": "Highest CV accuracy (87.2%) and F1 (87.8%). Suggests strong generalization potential."
+        },
+        "runner_up": {
+            "model": "XGBoost",
+            "approach": "Tuned + ROS",
+            "metrics": { "cv_accuracy": 0.8615, "cv_precision": 0.8295, "cv_recall": 0.9144, "cv_f1": 0.8690 },
+            "reason": "Second highest CV F1 (86.9%). Modern gradient boosting with excellent performance."
+        },
+        "best_cv_recall": {
+            "model": "KNN",
+            "approach": "Tuned + ROS",
+            "metrics": { "cv_accuracy": 0.8225, "cv_precision": 0.7659, "cv_recall": 0.9320, "cv_f1": 0.8403 },
+            "reason": "Highest CV recall (93.2%) - best for catching diabetic patients in balanced evaluation."
+        }
+    },
+
+    "cv_vs_train_test_analysis": {
+        "description": "Analysis of discrepancies between CV and Train/Test scores",
+        "key_insight": "For SMOTE/ROS models, CV was performed on BALANCED training data, while Train/Test evaluates on the ORIGINAL IMBALANCED test set. This methodological difference explains much of the gap.",
+        "implications": {
+            "oversampled_cv_scores": "CV scores for SMOTE/ROS approaches are evaluated on artificially balanced data (50/50 split). These scores are OPTIMISTIC and may not reflect real-world performance on imbalanced data.",
+            "train_test_more_realistic": "Train/Test scores for oversampled models test on real imbalanced distribution - MORE realistic for deployment.",
+            "non_oversampled_models": "For Untuned and Tuned (no oversampling), both CV and Train/Test evaluate on same distribution - directly comparable."
+        },
+        "notable_gaps": [
+            {
+                "model": "Random Forest + ROS",
+                "cv_f1": 0.8783,
+                "train_test_f1": 0.6747,
+                "gap": "+20.4%",
+                "interpretation": "Large gap partly due to CV testing on balanced data. The 67.5% train/test F1 is more realistic for deployment on imbalanced data."
+            },
+            {
+                "model": "Decision Tree + ROS",
+                "cv_f1": 0.8519,
+                "train_test_f1": 0.5641,
+                "gap": "+28.8%",
+                "interpretation": "Largest gap. Decision Tree overfits to balanced training data but struggles on imbalanced test set."
+            },
+            {
+                "model": "KNN + ROS",
+                "cv_f1": 0.8403,
+                "train_test_f1": 0.7045,
+                "gap": "+13.6%",
+                "interpretation": "Moderate gap. KNN generalizes better than tree-based models to imbalanced test data."
+            },
+            {
+                "model": "Gaussian NB + SMOTE",
+                "cv_f1": 0.7320,
+                "train_test_f1": 0.7253,
+                "gap": "+0.7%",
+                "interpretation": "Minimal gap - Gaussian NB performs consistently across balanced and imbalanced evaluation. Most reliable oversampled model."
+            }
+        ],
+        "warning": "High CV scores for oversampled models can be MISLEADING. Always verify with train/test performance on original imbalanced data before deployment."
+    },
+
+    "comparison_by_approach": {
+        "untuned": {
+            "best_model": "KNN",
+            "train_test": { "accuracy": 0.8019, "f1": 0.7342 },
+            "cv": { "accuracy": 0.7510, "f1": 0.5981 },
+            "note": "Simple baseline. Train/Test and CV on same distribution - train/test slightly better due to favorable test split."
+        },
+        "tuned": {
+            "best_model": "AdaBoost",
+            "train_test": { "accuracy": 0.8019, "f1": 0.7123 },
+            "cv": { "accuracy": 0.7553, "f1": 0.6022 },
+            "note": "Hyperparameter tuning with class-balanced weights. Includes XGBoost."
+        },
+        "tuned_smote": {
+            "best_model": "Gaussian NB",
+            "train_test": { "accuracy": 0.7642, "f1": 0.7253 },
+            "cv": { "accuracy": 0.7341, "f1": 0.7320 },
+            "note": "SMOTE oversampling. Gaussian NB shows consistent performance across both evaluations."
+        },
+        "tuned_ros": {
+            "best_model_by_cv": "Random Forest",
+            "best_model_by_train_test": "Gaussian NB",
+            "train_test_gaussian_nb": { "accuracy": 0.7642, "f1": 0.7191 },
+            "cv_random_forest": { "accuracy": 0.8716, "f1": 0.8783 },
+            "note": "ROS oversampling. CV suggests Random Forest is best, but Gaussian NB is more consistent on real imbalanced data."
+        }
+    },
+
+    "xgboost_performance": {
+        "description": "XGBoost was added to all tuned pipelines as a modern gradient boosting alternative",
+        "tuned": {
+            "train_test": { "accuracy": 0.7547, "f1": 0.6579 },
+            "cv": { "accuracy": 0.7753, "f1": 0.6340 }
+        },
+        "tuned_smote": {
+            "train_test": { "accuracy": 0.7453, "f1": 0.6667 },
+            "cv": { "accuracy": 0.8047, "f1": 0.8079 }
+        },
+        "tuned_ros": {
+            "train_test": { "accuracy": 0.7547, "f1": 0.6905 },
+            "cv": { "accuracy": 0.8615, "f1": 0.8690 }
+        },
+        "analysis": "XGBoost shows strong CV performance with oversampling (86.9% F1) but moderate train/test performance (69.1% F1). Like other tree-based models, it benefits from balanced data but the gap suggests caution for imbalanced deployment."
+    },
+
+    "final_recommendations": {
+        "for_deployment_imbalanced_data": {
+            "recommended": "Gaussian NB + SMOTE or Gaussian NB + ROS",
+            "why": "Most consistent performance between CV and train/test. Minimal gap suggests reliable real-world performance.",
+            "expected_performance": "~72-73% F1, ~91% recall on imbalanced data"
+        },
+        "for_medical_screening_priority_recall": {
+            "recommended": "Logistic Regression Tuned or Gaussian NB + SMOTE",
+            "why": "Both achieve 91.67% recall on train/test - catches most diabetic patients.",
+            "tradeoff": "Lower precision means more false positives, but acceptable for screening."
+        },
+        "for_simple_baseline": {
+            "recommended": "KNN Untuned",
+            "why": "80.19% accuracy, 73.42% F1 with no complex preprocessing. Good starting point.",
+            "note": "Consistent between CV and train/test - what you see is what you get."
+        },
+        "if_data_will_be_balanced_in_production": {
+            "recommended": "Random Forest + ROS or XGBoost + ROS",
+            "why": "If production data is balanced (equal diabetic/non-diabetic), CV scores are realistic.",
+            "expected_performance": "~87% F1 on balanced data"
+        }
+    },
+
+    "methodology_note": "For more accurate CV evaluation of oversampled models, consider nested CV where oversampling is applied within each fold. Current approach applies oversampling once before CV, which can lead to optimistic estimates."
+}

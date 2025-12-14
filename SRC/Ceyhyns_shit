@@ -1,0 +1,91 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# =============================
+# Simulation parameters
+# =============================
+POPULATION_SIZE = 1000
+MONTE_CARLO_RUNS = 100
+THRESHOLD_STEP = 0.1
+RANDOM_SEED = 42
+
+np.random.seed(RANDOM_SEED)
+
+# =============================
+# Monte Carlo ROC function
+# =============================
+def monte_carlo_roc(mu_h, sigma_h, mu_p, sigma_p):
+    """
+    Generates averaged ROC curve using Monte Carlo simulation.
+    Returns mean FPR, mean TPR, and AUC.
+    """
+
+    thresholds = np.arange(
+        mu_h - sigma_h,
+        mu_p + sigma_p,
+        THRESHOLD_STEP
+    )
+
+    all_fpr = []
+    all_tpr = []
+
+    for _ in range(MONTE_CARLO_RUNS):
+
+        healthy = np.random.normal(mu_h, sigma_h, POPULATION_SIZE)
+        patient = np.random.normal(mu_p, sigma_p, POPULATION_SIZE)
+
+        fpr = []
+        tpr = []
+
+        for th in thresholds:
+            tpr.append(np.mean(patient >= th))   # True Positive Rate
+            fpr.append(np.mean(healthy >= th))   # False Positive Rate
+
+        all_fpr.append(fpr)
+        all_tpr.append(tpr)
+
+    mean_fpr = np.mean(all_fpr, axis=0)
+    mean_tpr = np.mean(all_tpr, axis=0)
+
+    # FIX: Reverse arrays for correct AUC calculation
+    auc = np.trapz(mean_tpr[::-1], mean_fpr[::-1])
+
+    return mean_fpr, mean_tpr, auc
+
+# =============================
+# Simulation cases
+# =============================
+cases = {
+    "(a) μh=5 σh=2 | μp=7 σp=2": (5, 2, 7, 2),
+    "(b) μh=5 σh=2 | μp=9 σp=2": (5, 2, 9, 2),
+    "(c) μh=5 σh=2 | μp=11 σp=2": (5, 2, 11, 2),
+    "(d) μh=5 σh=2 | μp=11 σp=8": (5, 2, 11, 8),
+    "(e) μh=5 σh=5 | μp=9 σp=2": (5, 5, 9, 2),
+    "(f) μh=5 σh=2 | μp=5 σp=2": (5, 2, 5, 2),
+}
+
+# =============================
+# Plot averaged ROC curves
+# =============================
+plt.figure(figsize=(8, 8))
+
+for label, params in cases.items():
+    fpr, tpr, auc = monte_carlo_roc(*params)
+
+    plt.plot(
+        fpr,
+        tpr,
+        linewidth=2,
+        label=f"{label} (AUC = {auc:.2f})"
+    )
+
+# Random classifier reference
+plt.plot([0, 1], [0, 1], 'k--', label="Random classifier (AUC = 0.5)")
+
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("Averaged ROC Curves (Monte Carlo Simulation)")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()

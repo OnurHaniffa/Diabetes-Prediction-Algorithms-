@@ -1,13 +1,18 @@
+
 from SRC.preprocessing import (
-    load_data,
     impute_missing_values,
     remove_outliers,
-    select_features
+    select_features,
+    split_data,
+    scale_data
 )
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import RandomOverSampler
+import numpy as np
+
 
 
 def balanced_split_and_scale(df):       #same as classical but with new funtion for SMOTE balancing 
@@ -35,3 +40,14 @@ def balanced_split_and_scale(df):       #same as classical but with new funtion 
     print("After SMOTE:", x_train_balanced.shape, y_train_balanced.shape)
 
     return x_train_balanced, x_test_scaled, y_train_balanced, y_test
+
+
+def apply_random_oversampling(X_train_scaled, y_train):
+    ros = RandomOverSampler(random_state=42)
+    X_resampled, y_resampled = ros.fit_resample(X_train_scaled, y_train)
+
+    print("\n=== RANDOM OVERSAMPLING APPLIED ===")
+    print(f"Before: 0={sum(y_train==0)}, 1={sum(y_train==1)}")
+    print(f"After:  0={sum(y_resampled==0)}, 1={sum(y_resampled==1)}")
+
+    return X_resampled, y_resampled

@@ -11,7 +11,7 @@ from SRC.preprocessing import (
 )
 
 from SRC.classical_models_tuned import (
-    get_all_tuned_models,
+    get_all_tuned_models_with_ros,
     train_tuned_models,
     evaluate_tuned_models_cv
 )
@@ -23,7 +23,7 @@ def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
 
 
-def run_training_tuned():
+def run_training_tuned_ros():
 
     print("\n===== LOADING DATA =====")
     df = load_data("Data/pima.csv")
@@ -43,27 +43,27 @@ def run_training_tuned():
     print("\n===== SCALING DATA =====")
     x_train_scaled, x_test_scaled = scale_data(x_train, x_test)
 
-    print("\n===== GRID SEARCH TUNING =====")
-    tuned_models = get_all_tuned_models(x_train_scaled, y_train)
-
-    print("\n===== TRAINING TUNED MODELS =====")
-    tuned_results, trained_models = train_tuned_models(
-        tuned_models, x_train_scaled, y_train, x_test_scaled, y_test
+    print("\n===== RANDOM OVERSAMPLING + GRID SEARCH TUNING =====")
+    tuned_models, X_train_ros, y_train_ros = get_all_tuned_models_with_ros(
+        x_train_scaled, y_train
     )
 
-    print("\n===== TUNED RESULTS (Train/Test) =====")
+    print("\n===== TRAINING TUNED MODELS ON OVERSAMPLED DATA =====")
+    tuned_results, trained_models = train_tuned_models(
+        tuned_models, X_train_ros, y_train_ros, x_test_scaled, y_test
+    )
+
+    print("\n===== TUNED + ROS RESULTS (Train/Test) =====")
     for model_name, metrics in tuned_results.items():
         print(f"\n--- {model_name} ---")
         for metric_name, value in metrics.items():
             print(f"{metric_name}: {value:.4f}")
 
-    # === 10-FOLD CROSS VALIDATION ===
+    # === 10-FOLD CROSS VALIDATION (on ROS'd training data) ===
     print("\n===== 10-FOLD CROSS VALIDATION =====")
-    X = df.drop("Outcome", axis=1)
-    y = df["Outcome"]
-    cv_results = evaluate_tuned_models_cv(tuned_models, X, y, k=10)
+    cv_results = evaluate_tuned_models_cv(tuned_models, X_train_ros, y_train_ros, k=10)
 
-    print("\n===== TUNED RESULTS (Cross Validation) =====")
+    print("\n===== TUNED + ROS RESULTS (Cross Validation) =====")
     for model_name, metrics in cv_results.items():
         print(f"\n--- {model_name} ---")
         for metric_name, value in metrics.items():
@@ -74,17 +74,17 @@ def run_training_tuned():
         "train_test": tuned_results,
         "cross_validation": cv_results
     }
-    save_results(all_results, "metrics_classical_tuned.json")
+    save_results(all_results, "metrics_classical_tuned_ros.json")
 
     # === SAVE MODELS ===
-    ensure_dir("Models/tuned")
+    ensure_dir("Models/tuned_ros")
     for name, model in trained_models.items():
-        path = f"Models/tuned/{name.replace(' ', '_').lower()}_tuned.pkl"
+        path = f"Models/tuned_ros/{name.replace(' ', '_').lower()}_tuned_ros.pkl"
         joblib.dump(model, path)
         print(f"Saved model: {path}")
 
-    print("\n===== TUNED TRAINING COMPLETE =====")
+    print("\n===== TUNED + ROS TRAINING COMPLETE =====")
 
 
 if __name__ == "__main__":
-    run_training_tuned()
+    run_training_tuned_ros()
