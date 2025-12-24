@@ -167,18 +167,32 @@ def get_all_tuned_models(X, y):         #Returns a dictionary of all TUNED class
 
 
 def train_tuned_models(models, x_train, y_train, x_test, y_test):
+    """
+    Train and evaluate tuned models on both train and test sets.
+    Train metrics help detect overfitting (if train >> test, model overfits).
+    """
     results = {}
     trained = {}
 
     for name, model in models.items():
         model.fit(x_train, y_train)
-        preds = model.predict(x_test)
+
+        # Predictions on BOTH train and test sets
+        train_preds = model.predict(x_train)
+        test_preds = model.predict(x_test)
 
         results[name] = {
-            "accuracy": accuracy_score(y_test, preds),
-            "precision": precision_score(y_test, preds),
-            "recall": recall_score(y_test, preds),
-            "f1": f1_score(y_test, preds),
+            # Training metrics (for overfitting detection)
+            "train_accuracy": accuracy_score(y_train, train_preds),
+            "train_precision": precision_score(y_train, train_preds),
+            "train_recall": recall_score(y_train, train_preds),
+            "train_f1": f1_score(y_train, train_preds),
+
+            # Test metrics (actual performance on unseen data)
+            "test_accuracy": accuracy_score(y_test, test_preds),
+            "test_precision": precision_score(y_test, test_preds),
+            "test_recall": recall_score(y_test, test_preds),
+            "test_f1": f1_score(y_test, test_preds),
         }
 
         trained[name] = model
